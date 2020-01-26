@@ -6,8 +6,8 @@ import time
 from gpiozero import OutputDevice
 
 
-ON_THRESHOLD = 65  # (degrees Celsius) Fan kicks on at this temperature.
-OFF_THRESHOLD = 55  # (degress Celsius) Fan shuts off at this temperature.
+ON_THRESHOLD = 65*1000  # (degrees Celsius) Fan kicks on at this temperature.
+OFF_THRESHOLD = 55*1000  # (degress Celsius) Fan shuts off at this temperature.
 SLEEP_INTERVAL = 5  # (seconds) How often we check the core temperature.
 GPIO_PIN = 17  # Which GPIO pin you're using to control the fan.
 
@@ -15,21 +15,15 @@ GPIO_PIN = 17  # Which GPIO pin you're using to control the fan.
 def get_temp():
     """Get the core temperature.
 
-    Run a shell script to get the core temp and parse the output.
-
-    Raises:
-        RuntimeError: if response cannot be parsed.
+    Read file from /sys to get CPU temp in temp in C *1000
 
     Returns:
-        float: The core temperature in degrees Celsius.
+        int: The core temperature in thousanths of degrees Celsius.
     """
-    output = subprocess.run(['vcgencmd', 'measure_temp'], capture_output=True)
-    temp_str = output.stdout.decode()
-    try:
-        return float(temp_str.split('=')[1].split('\'')[0])
-    except (IndexError, ValueError):
-        raise RuntimeError('Could not parse temperature output.')
-
+    with open("/sys/class/thermal/thermal_zone0/temp") as f:
+        temp_data = f.read()
+    
+    return int(temp_data)
 
 if __name__ == '__main__':
     # Validate the on and off thresholds
