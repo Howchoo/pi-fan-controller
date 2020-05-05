@@ -3,23 +3,19 @@
 import subprocess
 import time
 
-from gpiozero import OutputDevice
+from gpiozero import PWMOutputDevice
 
-
-ON_THRESHOLD = 65  # (degrees Celsius) Fan kicks on at this temperature.
-OFF_THRESHOLD = 55  # (degress Celsius) Fan shuts off at this temperature.
-SLEEP_INTERVAL = 5  # (seconds) How often we check the core temperature.
-GPIO_PIN = 17  # Which GPIO pin you're using to control the fan.
+SLEEP_INTERVAL = 3  # (seconds) How often we check the core temperature.
+GPIO_PIN = 18  # Which GPIO pin you're using to control the fan.
+OUTPUTS = [0.5, 0.6, 0.7, 0.8, 0.9, 1]
+TEMPS = [40.0, 45.0, 50.0, 55.0, 60.0, 65.0]
 
 
 def get_temp():
     """Get the core temperature.
-
     Run a shell script to get the core temp and parse the output.
-
     Raises:
         RuntimeError: if response cannot be parsed.
-
     Returns:
         float: The core temperature in degrees Celsius.
     """
@@ -31,25 +27,24 @@ def get_temp():
         raise RuntimeError('Could not parse temperature output.')
 
 
-if __name__ == '__main__':
-    # Validate the on and off thresholds
-    if OFF_THRESHOLD >= ON_THRESHOLD:
-        raise RuntimeError('OFF_THRESHOLD must be less than ON_THRESHOLD')
 
-    fan = OutputDevice(GPIO_PIN)
+def get_speed():
+    """
+    Dynamically change the output of the motor
+    Returns: A percentage of max max speed corresponding to temperature
+    """
+    speed = 0.0
+    for i in range(len(TEMPS)):  # loop through list of temps
+        if get_temp() > TEMPS[i]:
+            speed = OUTPUTS[i]  # set speed to the corresponding temp
+    return speed
+
+
+if __name__ == '__main__':
+
+    fan = PWMOutputDevice(GPIO_PIN)
 
     while True:
-        temp = get_temp()
-
-        # Start the fan if the temperature has reached the limit and the fan
-        # isn't already running.
-        # NOTE: `fan.value` returns 1 for "on" and 0 for "off"
-        if temp > ON_THRESHOLD and not fan.value:
-            fan.on()
-
-        # Stop the fan if the fan is running and the temperature has dropped
-        # to 10 degrees below the limit.
-        elif fan.value and temp < OFF_THRESHOLD:
-            fan.off()
+        fan.value = get_speed()
 
         time.sleep(SLEEP_INTERVAL)
