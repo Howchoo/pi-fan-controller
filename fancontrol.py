@@ -30,8 +30,8 @@ def get_temp():
 
 def get_speed():
     """
-    Dynamically change the output of the motor
-    Returns: A percentage of max max speed corresponding to temperature
+    Gets the temp of the board and assigns percentage of max max speed correspondingly
+    Returns: A value between 0-1. Can be configured by adjusting OUTPUTS and TEMPS.
     """
     speed = 0.0
     for i in range(len(TEMPS)):  # loop through list of temps
