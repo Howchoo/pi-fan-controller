@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import subprocess
 import time
 
 from gpiozero import OutputDevice
@@ -23,12 +22,14 @@ def get_temp():
     Returns:
         float: The core temperature in degrees Celsius.
     """
-    output = subprocess.run(['vcgencmd', 'measure_temp'], capture_output=True)
-    temp_str = output.stdout.decode()
+
+    with open('/sys/class/thermal/thermal_zone0/temp') as file:
+        temp_str = file.read()
+
     try:
-        return float(temp_str.split('=')[1].split('\'')[0])
-    except (IndexError, ValueError):
-        raise RuntimeError('Could not parse temperature output.')
+        return int(temp_str) / 1000
+    except (IndexError, ValueError,) as e:
+        raise RuntimeError('Could not parse temperature output.') from e
 
 
 if __name__ == '__main__':
