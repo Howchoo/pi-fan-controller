@@ -5,7 +5,7 @@ import time
 from gpiozero import OutputDevice
 
 MAX_THRESHOLD = 60.0 # (degrees Celsius) Fan kicks on at full speed at this temperature.
-MIN_THRESHOLD = 40.0 # (degress Celsius) Fan kicks on at minimum speed at this temperature.
+MIN_THRESHOLD = 50.0 # (degress Celsius) Fan kicks on at minimum speed at this temperature.
 SLEEP_INTERVAL = 1.0 # (miliseconds) How long one tick last
 GPIO_PIN = 17 # Which GPIO pin you're using to control the fan.
 MIN_TICKS = 100 # Number of min ticks in cycle
