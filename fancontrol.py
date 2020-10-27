@@ -14,23 +14,18 @@ GPIO_PIN = 17  # Which GPIO pin you're using to control the fan.
 def get_temp():
     """Get the core temperature.
 
-    Run a shell script to get the core temp and parse the output.
-
-    Raises:
-        RuntimeError: if response cannot be parsed.
+    Read file from /sys to get CPU temp in temp in C *1000
 
     Returns:
-        float: The core temperature in degrees Celsius.
+        int: The core temperature in thousanths of degrees Celsius.
     """
-
-    with open('/sys/class/thermal/thermal_zone0/temp') as file:
-        temp_str = file.read()
+    with open('/sys/class/thermal/thermal_zone0/temp') as f:
+        temp_str = f.read()
 
     try:
         return int(temp_str) / 1000
     except (IndexError, ValueError,) as e:
         raise RuntimeError('Could not parse temperature output.') from e
-
 
 if __name__ == '__main__':
     # Validate the on and off thresholds
