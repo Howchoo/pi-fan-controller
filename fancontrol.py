@@ -6,13 +6,8 @@ from gpiozero import PWMOutputDevice
 
 SLEEP_INTERVAL = 5  # (seconds) How often we check the core temperature.
 GPIO_PIN = 18  # Which GPIO pin you're using to control the fan.
-TEMP_TO_SPEED = {
-    55: 0,
-    60: 0.3,
-    62: 0.5,
-    65: 0.8,
-    67: 100
-}
+OFF_THRESHOLD = 55
+FULL_SPEED_THRESHOLD = 65
 
 
 def get_temp():
@@ -32,11 +27,8 @@ def get_temp():
         raise RuntimeError('Could not parse temperature output.') from e
 
 
-def get_speed(current_temp):
-    speed = 0
-    for temp in TEMP_TO_SPEED:
-        if current_temp >= temp:
-            speed = TEMP_TO_SPEED[temp]
+def get_speed(temp):
+    speed = temp / (FULL_SPEED_THRESHOLD - OFF_THRESHOLD)
     return speed
 
 
