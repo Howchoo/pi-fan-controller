@@ -32,7 +32,7 @@ def get_speed(temp):
     speed = ((temp * OFF_THRESHOLD) / FULL_SPEED_THRESHOLD) / 100
     speed = min(MAX_FAN_SPEED, speed)
     speed = max(MIN_FAN_SPEED, speed)
-    return speed
+    return round(speed, 2)
 
 
 def set_fan_speed(fan_device, new_speed):
