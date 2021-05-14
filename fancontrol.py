@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
 import time
-
 from gpiozero import PWMOutputDevice
 
 SLEEP_INTERVAL = 5  # (seconds) How often we check the core temperature.
 GPIO_PIN = 18  # Which GPIO pin you're using to control the fan.
+MIN_FAN_SPEED = 0.4
+MAX_FAN_SPEED = 1
 OFF_THRESHOLD = 55
 FULL_SPEED_THRESHOLD = 65
 
@@ -28,7 +29,9 @@ def get_temp():
 
 
 def get_speed(temp):
-    speed = temp / (FULL_SPEED_THRESHOLD - OFF_THRESHOLD)
+    speed = (temp * OFF_THRESHOLD) / FULL_SPEED_THRESHOLD
+    speed = min(MAX_FAN_SPEED, speed)
+    speed = max(MIN_FAN_SPEED, speed)
     return speed
 
 
