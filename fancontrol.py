@@ -32,17 +32,21 @@ def get_speed(temp):
     return speed
 
 
-def main():
-    fan = OutputDevice(GPIO_PIN)
+def set_fan_speed(fan_device, new_speed):
+    fan_device.value = 0
+    time.sleep(1)
+    fan_device.value = 1
+    time.sleep(1)
+    fan_device.value = new_speed
 
+
+def main():
+    fan = PWMOutputDevice(GPIO_PIN)
     while True:
         temp = get_temp()
-
         new_speed = get_speed(temp)
-
         print(f"Temp: {temp}; new fan speed:{new_speed}")
-        fan.value = new_speed
-
+        set_fan_speed(fan, new_speed)
         time.sleep(SLEEP_INTERVAL)
 
 
