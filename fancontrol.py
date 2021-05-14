@@ -9,6 +9,7 @@ MIN_FAN_SPEED = 0.4
 MAX_FAN_SPEED = 1
 OFF_THRESHOLD = 55
 FULL_SPEED_THRESHOLD = 65
+MAX_TEMP_FOR_RESTART = 75
 
 
 def get_temp():
@@ -37,17 +38,19 @@ def get_speed(temp):
 
 
 def set_fan_speed(fan_device, new_speed):
-    fan_device.value = 0
-    time.sleep(1)
-    fan_device.value = 1
-    time.sleep(1)
+    if fan_device.value == 0:
+        fan_device.value = 1
+        time.sleep(1)
     fan_device.value = new_speed
 
 
 def main():
     fan = PWMOutputDevice(GPIO_PIN)
+    set_fan_speed(fan, 1)
     while True:
         temp = get_temp()
+        if temp > MAX_TEMP_FOR_RESTART:
+            exit()
         new_speed = get_speed(temp)
         print(f"Temp: {temp}; new fan speed:{new_speed}")
         set_fan_speed(fan, new_speed)
