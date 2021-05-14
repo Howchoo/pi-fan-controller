@@ -30,8 +30,9 @@ def get_temp():
 
 def get_speed(temp):
     speed = (temp - OFF_THRESHOLD) / (FULL_SPEED_THRESHOLD - OFF_THRESHOLD)
+    if speed < MIN_FAN_SPEED:
+        speed = 0
     speed = min(MAX_FAN_SPEED, speed)
-    speed = max(MIN_FAN_SPEED, speed)
     return round(speed, 2)
 
 
