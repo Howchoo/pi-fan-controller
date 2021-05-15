@@ -1,2 +1,4 @@
+colorzero==2.0
 gpiozero==1.5.1
+psutil==5.8.0
 RPi.GPIO==0.7.0
