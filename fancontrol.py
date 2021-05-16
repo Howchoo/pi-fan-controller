@@ -47,9 +47,9 @@ def get_temp():
 
 def get_speed(temp, cpu_usage):
     speed = (temp - OFF_THRESHOLD) / (FULL_SPEED_THRESHOLD - OFF_THRESHOLD)
-    if temp < 70 and cpu_usage <= CPU_PERCENTAGE_THRESHOLD or speed <= 0:
-        speed = 0
-    elif speed <= MIN_FAN_SPEED:
+    # if temp < 70 and cpu_usage <= CPU_PERCENTAGE_THRESHOLD or speed <= 0:
+    #     speed = 0
+    if speed <= MIN_FAN_SPEED:
         speed = MIN_FAN_SPEED
     else:
         speed = min(MAX_FAN_SPEED, speed)
