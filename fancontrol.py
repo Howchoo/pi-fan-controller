@@ -45,10 +45,8 @@ def get_temp():
         raise RuntimeError('Could not parse temperature output.') from e
 
 
-def get_speed(temp, cpu_usage):
+def get_speed(temp):
     speed = (temp - OFF_THRESHOLD) / (FULL_SPEED_THRESHOLD - OFF_THRESHOLD)
-    # if temp < 70 and cpu_usage <= CPU_PERCENTAGE_THRESHOLD or speed <= 0:
-    #     speed = 0
     if speed <= MIN_FAN_SPEED:
         speed = MIN_FAN_SPEED
     else:
@@ -71,25 +69,18 @@ def restart_fan(fan):
     time.sleep(1)
 
 
-def sleep_while_count_avg_cpu_load(seconds):
-    sum_cpu_load = 0
-    for _ in range(0, seconds):
-        sum_cpu_load += psutil.cpu_percent()
-        time.sleep(1)
-    avg_cpu = sum_cpu_load / seconds
-    return round(avg_cpu, 2)
-
-
 def main():
     fan = PWMOutputDevice(GPIO_PIN)
     restart_fan(fan)
     while True:
-        cpu_percentage = sleep_while_count_avg_cpu_load(SLEEP_INTERVAL)
         temp = get_temp()
-        new_speed = get_speed(temp, cpu_percentage)
+        new_speed = get_speed(temp)
         if new_speed != fan.value:
-            logging.info(f"Temp: {temp}; cpu: {cpu_percentage}%; new fan speed: {new_speed}")
-        set_fan_speed(fan, new_speed)
+            logging.info(f"Temp: {temp}; New fan speed: {new_speed}")
+            set_fan_speed(fan, new_speed)
+        else:
+            logging.info(f"Temp: {temp}; (fan speed: {new_speed})")
+        time.sleep(SLEEP_INTERVAL)
 
 
 if __name__ == '__main__':
