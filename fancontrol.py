@@ -59,15 +59,24 @@ def restart_fan(fan):
     time.sleep(1)
 
 
+def sleep_while_count_avg_cpu_load(seconds):
+    sum_cpu_load = 0
+    for _ in range(0, seconds):
+        sum_cpu_load += psutil.cpu_percent()
+        time.sleep(1)
+    return sum_cpu_load / seconds
+
+
 def main():
     fan = PWMOutputDevice(GPIO_PIN)
     restart_fan(fan)
     while True:
+        cpu_percentage = sleep_while_count_avg_cpu_load(SLEEP_INTERVAL)
         temp = get_temp()
-        new_speed = get_speed(temp, psutil.cpu_percent())
-        print(f"Temp: {temp}; new fan speed: {new_speed}")
+        new_speed = get_speed(temp, cpu_percentage)
+        if new_speed != fan.value:
+            print(f"Temp: {temp}; cpu: {cpu_percentage}%; new fan speed: {new_speed}")
         set_fan_speed(fan, new_speed)
-        time.sleep(SLEEP_INTERVAL)
 
 
 if __name__ == '__main__':
