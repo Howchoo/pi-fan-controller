@@ -2,6 +2,8 @@
 
 import time
 import psutil
+import logging
+import sys
 from gpiozero import PWMOutputDevice
 
 SLEEP_INTERVAL = 20  # (seconds) How often we check the core temperature.
@@ -15,6 +17,15 @@ FULL_SPEED_THRESHOLD = 67
 
 MAX_TEMP_FOR_RESTART = 75
 CPU_PERCENTAGE_THRESHOLD = 15
+
+root = logging.getLogger()
+root.setLevel(logging.DEBUG)
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s [%(levelname)s] - %(message)s')
+handler.setFormatter(formatter)
+root.addHandler(handler)
 
 
 def get_temp():
@@ -76,7 +87,7 @@ def main():
         temp = get_temp()
         new_speed = get_speed(temp, cpu_percentage)
         if new_speed != fan.value:
-            print(f"Temp: {temp}; cpu: {cpu_percentage}%; new fan speed: {new_speed}")
+            logging.info(f"Temp: {temp}; cpu: {cpu_percentage}%; new fan speed: {new_speed}")
         set_fan_speed(fan, new_speed)
 
 
