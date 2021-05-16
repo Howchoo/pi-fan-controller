@@ -45,20 +45,24 @@ def get_speed(temp, cpu_usage):
     return round(speed, 2)
 
 
-def set_fan_speed(fan_device, new_speed):
-    if fan_device.value == 0:
-        fan_device.value = 1
-        time.sleep(1)
-    fan_device.value = new_speed
+def set_fan_speed(fan, new_speed):
+    if fan.value == 0:
+        restart_fan(fan)
+    fan.value = new_speed
+
+
+def restart_fan(fan):
+    fan.value = 1
+    time.sleep(1)
 
 
 def main():
     fan = PWMOutputDevice(GPIO_PIN)
-    set_fan_speed(fan, 1)
+    restart_fan(fan)
     while True:
         temp = get_temp()
         new_speed = get_speed(temp, psutil.cpu_percent())
-        print(f"Temp: {temp}; new fan speed:{new_speed}")
+        print(f"Temp: {temp}; new fan speed: {new_speed}")
         set_fan_speed(fan, new_speed)
         time.sleep(SLEEP_INTERVAL)
 
