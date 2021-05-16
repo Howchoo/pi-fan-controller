@@ -64,7 +64,8 @@ def sleep_while_count_avg_cpu_load(seconds):
     for _ in range(0, seconds):
         sum_cpu_load += psutil.cpu_percent()
         time.sleep(1)
-    return sum_cpu_load / seconds
+    avg_cpu = sum_cpu_load / seconds
+    return round(avg_cpu, 2)
 
 
 def main():
