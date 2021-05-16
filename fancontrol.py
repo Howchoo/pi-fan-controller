@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import time
+import psutil
 from gpiozero import PWMOutputDevice
 
 SLEEP_INTERVAL = 20  # (seconds) How often we check the core temperature.
@@ -10,6 +11,7 @@ MAX_FAN_SPEED = 1
 OFF_THRESHOLD = 54
 FULL_SPEED_THRESHOLD = 62
 MAX_TEMP_FOR_RESTART = 75
+CPU_PERCENTAGE_THRESHOLD = 15
 
 
 def get_temp():
@@ -29,9 +31,9 @@ def get_temp():
         raise RuntimeError('Could not parse temperature output.') from e
 
 
-def get_speed(temp):
+def get_speed(temp, cpu_usage):
     speed = (temp - OFF_THRESHOLD) / (FULL_SPEED_THRESHOLD - OFF_THRESHOLD)
-    if speed <= 0:
+    if temp < 70 and cpu_usage <= CPU_PERCENTAGE_THRESHOLD or speed <= 0:
         speed = 0
     elif speed <= MIN_FAN_SPEED:
         speed = MIN_FAN_SPEED
@@ -52,9 +54,7 @@ def main():
     set_fan_speed(fan, 1)
     while True:
         temp = get_temp()
-        if temp > MAX_TEMP_FOR_RESTART:
-            exit()
-        new_speed = get_speed(temp)
+        new_speed = get_speed(temp, psutil.cpu_percent())
         print(f"Temp: {temp}; new fan speed:{new_speed}")
         set_fan_speed(fan, new_speed)
         time.sleep(SLEEP_INTERVAL)
