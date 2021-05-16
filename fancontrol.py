@@ -52,6 +52,9 @@ def set_fan_speed(fan, new_speed):
 
 
 def restart_fan(fan):
+    if fan.value != 0:
+        fan.value = 0
+        time.sleep(1)
     fan.value = 1
     time.sleep(1)
 
