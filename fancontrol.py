@@ -57,9 +57,10 @@ def get_speed(temp, cpu_usage):
 
 
 def set_fan_speed(fan, new_speed):
-    if fan.value == 0:
-        restart_fan(fan)
-    fan.value = new_speed
+    if fan.value != new_speed:
+        if fan.value == 0:
+            restart_fan(fan)
+        fan.value = new_speed
 
 
 def restart_fan(fan):
