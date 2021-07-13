@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import time
+import syslog
 
 from gpiozero import OutputDevice
 
@@ -28,6 +29,9 @@ def get_temp():
         raise RuntimeError('Could not parse temperature output.') from e
 
 if __name__ == '__main__':
+    syslog.openlog(ident="FAN_CONTROL",logoption=syslog.LOG_PID, facility=syslog.LOG_LOCAL0)
+    syslog.syslog(syslog.LOG_INFO, "Fan control started")
+
     # Validate the on and off thresholds
     if OFF_THRESHOLD >= ON_THRESHOLD:
         raise RuntimeError('OFF_THRESHOLD must be less than ON_THRESHOLD')
@@ -41,11 +45,13 @@ if __name__ == '__main__':
         # isn't already running.
         # NOTE: `fan.value` returns 1 for "on" and 0 for "off"
         if temp > ON_THRESHOLD and not fan.value:
+            syslog.syslog(syslog.LOG_INFO, "Reached temperature of " + str(temp) + " turning on fan")
             fan.on()
 
         # Stop the fan if the fan is running and the temperature has dropped
         # to 10 degrees below the limit.
         elif fan.value and temp < OFF_THRESHOLD:
+            syslog.syslog(syslog.LOG_INFO, "Reached temperature of " + str(temp) + " turning off fan")
             fan.off()
 
         time.sleep(SLEEP_INTERVAL)
