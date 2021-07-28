@@ -8,7 +8,7 @@ MAX_THRESHOLD = 60.0 # (degrees Celsius) Fan kicks on at full speed at this temp
 MIN_THRESHOLD = 50.0 # (degress Celsius) Fan kicks on at minimum speed at this temperature.
 SLEEP_INTERVAL = 1.0 # (miliseconds) How long one tick last
 GPIO_PIN = 17 # Which GPIO pin you're using to control the fan.
-MIN_TICKS = 200 # Number of min ticks in cycle
+MIN_TICKS = 100 # Number of min ticks in cycle
 MAX_TICKS = 1000 # Number of max ticks in cycle
 FAN_ON = 1
 FAN_OFF = 0
@@ -34,8 +34,8 @@ def normalize_temp(temp):
 
 def count_fire_tick(temp):
     temp = ((MAX_TICKS / MIN_TICKS) - (MAX_TICKS / MIN_TICKS) * float(temp))
-    if temp <= 0:
-        temp = 1
+    if temp <= 0.0:
+        temp = 1.0
     return float(temp)
 
 def fan_command(command, fan):
