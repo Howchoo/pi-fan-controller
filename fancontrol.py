@@ -47,10 +47,10 @@ def fan_command(command, fan):
 def run_cycle(fire_tick, fan):
     i = 0
     while i < MAX_TICKS:
-        if (i % fire_tick) == 0:
+        if (i % int(fire_tick)) == 0:
             fan_command(FAN_ON, fan)
         time.sleep(SLEEP_INTERVAL / 1000.0)
-        if (i % fire_tick) != 0:
+        if (i % int(fire_tick)) != 0:
             fan_command(FAN_OFF, fan)
 
 if __name__ == '__main__':
