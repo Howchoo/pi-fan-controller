@@ -9,7 +9,7 @@ MAX_THRESHOLD = 60.0 # (degrees Celsius) Fan kicks on at full speed at this temp
 MIN_THRESHOLD = 50.0 # (degress Celsius) Fan kicks on at minimum speed at this temperature.
 SLEEP_INTERVAL = 1.0 # (miliseconds) How long one tick last
 GPIO_PIN = 17 # Which GPIO pin you're using to control the fan.
-MIN_TICKS = 100 # Number of min ticks in cycle
+MIN_TICKS = 200 # Number of min ticks in cycle
 MAX_TICKS = 1000 # Number of max ticks in cycle
 FAN_ON = 1
 FAN_OFF = 0
@@ -47,7 +47,7 @@ def run_cycle(fire_tick, fan):
     while i < MAX_TICKS:
         i += 1
         time.sleep(SLEEP_INTERVAL / 1000.0)
-        if i % (int(fire_tick) + int((i * fire_tick) % 1)) == 0:
+        if i % int(fire_tick) == 0:
             fan_command(FAN_ON, fan)
         else:
             fan_command(FAN_OFF, fan)
