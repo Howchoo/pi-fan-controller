@@ -33,10 +33,10 @@ def normalize_temp(temp):
     return float(temp)
 
 def count_fire_tick(temp):
-    temp = ((MAX_TICKS / MIN_TICKS) - (MAX_TICKS / MIN_TICKS) * float(temp))
-    if temp <= 0.0:
-        temp = 1.0
-    return float(temp)
+    temp = int((MAX_TICKS / MIN_TICKS) - (MAX_TICKS / MIN_TICKS) * float(temp))
+    if temp <= 0:
+        temp = 1
+    return int(temp)
 
 def fan_command(command, fan):
     if command == FAN_ON and not fan.value:
@@ -47,13 +47,21 @@ def fan_command(command, fan):
 def run_cycle(fire_tick, fan):
     i = 0
     while i < MAX_TICKS:
-        if (i % int(fire_tick)) == 0:
+        i += 1
+        if (i % fire_tick) == 0:
             fan_command(FAN_ON, fan)
         time.sleep(SLEEP_INTERVAL / 1000.0)
-        if (i % int(fire_tick)) != 0:
+        if (i % fire_tick) != 0:
             fan_command(FAN_OFF, fan)
 
 if __name__ == '__main__':
+    # Validate the min and max thresholds
+    if MIN_THRESHOLD >= MAX_THRESHOLD:
+        raise RuntimeError('MIN_THRESHOLD must be less than MAX_THRESHOLD')
+
+    # Validate the min and max ticks
+    if MIN_TICKS >= MAX_TICKS:
+        raise RuntimeError('MIN_TICKS must be less than MAX_TICKS')
 
     fan = OutputDevice(GPIO_PIN)
 
