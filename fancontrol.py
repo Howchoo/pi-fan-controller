@@ -17,20 +17,18 @@ FAN_OFF = 0
 def get_temp():
     """Get the core temperature.
 
-    Run a shell script to get the core temp and parse the output.
-
-    Raises:
-        RuntimeError: if response cannot be parsed.
+    Read file from /sys to get CPU temp in temp in C *1000
 
     Returns:
-        float: The core temperature in degrees Celsius.
+        int: The core temperature in thousanths of degrees Celsius.
     """
-    output = subprocess.run(['vcgencmd', 'measure_temp'], capture_output=True)
-    temp_str = output.stdout.decode()
+    with open('/sys/class/thermal/thermal_zone0/temp') as f:
+        temp_str = f.read()
+
     try:
-        return float(temp_str.split('=')[1].split('\'')[0])
-    except (IndexError, ValueError):
-        raise RuntimeError('Could not parse temperature output.')
+        return int(temp_str) / 1000
+    except (IndexError, ValueError,) as e:
+        raise RuntimeError('Could not parse temperature output.') from e
 
 def normalize_temp(temp):
     temp = ((float(temp) - MIN_THRESHOLD) / (MAX_THRESHOLD - MIN_THRESHOLD))
