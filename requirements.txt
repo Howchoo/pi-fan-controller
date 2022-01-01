@@ -1,4 +1,9 @@
+certifi==2021.10.8
+charset-normalizer==2.0.9
 colorzero==2.0
 gpiozero==1.5.1
 psutil==5.8.0
 RPi.GPIO==0.7.0
+idna==3.3
+requests==2.26.0
+urllib3==1.26.7

@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 import time
+import os
 import psutil
 import logging
 import sys
+import requests
 from gpiozero import PWMOutputDevice
 
 SLEEP_INTERVAL = 20  # (seconds) How often we check the core temperature.
@@ -17,6 +19,8 @@ FULL_SPEED_THRESHOLD = 67
 
 MAX_TEMP_FOR_RESTART = 75
 CPU_PERCENTAGE_THRESHOLD = 20
+
+SPEED_TRACKER_URL = os.environ.get("SPEED_TRACKER_URL")
 
 root = logging.getLogger()
 root.setLevel(logging.DEBUG)
@@ -68,6 +72,14 @@ def restart_fan(fan):
     fan.value = 1
     time.sleep(1)
 
+def report_fan_speed(speed):
+    if SPEED_TRACKER_URL:
+        post_data = {'fan_speed': speed}
+        try:
+            requests.post(SPEED_TRACKER_URL, data = post_data)
+        except:
+            logging.exception("Failed to report fan speed")
+
 
 def main():
     fan = PWMOutputDevice(GPIO_PIN)
@@ -78,6 +90,7 @@ def main():
         if new_speed != fan.value:
             logging.info(f"Temp: {temp}; New fan speed: {new_speed}")
             set_fan_speed(fan, new_speed)
+            report_fan_speed(new_speed)
         else:
             logging.info(f"Temp: {temp}; (fan speed: {new_speed})")
         time.sleep(SLEEP_INTERVAL)
