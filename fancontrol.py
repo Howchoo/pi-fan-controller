@@ -22,11 +22,12 @@ CPU_PERCENTAGE_THRESHOLD = 20
 
 SPEED_TRACKER_URL = os.environ.get("SPEED_TRACKER_URL")
 
+log_level = logging.INFO
 root = logging.getLogger()
-root.setLevel(logging.DEBUG)
+root.setLevel(log_level)
 
 handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(logging.DEBUG)
+handler.setLevel(log_level)
 formatter = logging.Formatter('%(asctime)s [%(levelname)s] - %(message)s')
 handler.setFormatter(formatter)
 root.addHandler(handler)
