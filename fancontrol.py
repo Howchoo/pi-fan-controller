@@ -14,8 +14,18 @@ FAN_ON = 1
 FAN_OFF = 0
 
 def get_temp():
+    """Get the core temperature.
+    Read file from /sys to get CPU temp in temp in C *1000
+    Returns:
+        int: The core temperature in thousanths of degrees Celsius.
+    """
     with open('/sys/class/thermal/thermal_zone0/temp') as f:
         temp_str = f.read()
+
+    try:
+        return int(temp_str) / 1000
+    except (IndexError, ValueError,) as e:
+        raise RuntimeError('Could not parse temperature output.') from e
 
 def normalize_temp(temp):
     temp = ((float(temp) - MIN_THRESHOLD) / (MAX_THRESHOLD - MIN_THRESHOLD))
