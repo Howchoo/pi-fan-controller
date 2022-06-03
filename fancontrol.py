@@ -32,6 +32,8 @@ formatter = logging.Formatter('%(asctime)s [%(levelname)s] - %(message)s')
 handler.setFormatter(formatter)
 root.addHandler(handler)
 
+OVERRIDDEN = False
+
 
 def get_temp():
     """Get the core temperature.
@@ -59,6 +61,20 @@ def get_speed(temp):
     return round(speed, 2)
 
 
+def override_speed(new_speed):
+    # fan = get_fan()
+    global OVERRIDDEN
+    OVERRIDDEN = True
+    # fan.value = new_speed
+    time.sleep(10)
+    OVERRIDDEN = False
+
+
+def get_current_speed():
+    fan = get_fan()
+    return fan.value
+
+
 def set_fan_speed(fan, new_speed):
     if fan.value != new_speed:
         if fan.value == 0:
@@ -73,28 +89,37 @@ def restart_fan(fan):
     fan.value = 1
     time.sleep(1)
 
+
 def report_fan_speed(speed):
     if SPEED_TRACKER_URL:
         post_data = {'fan_speed': speed}
         try:
-            requests.post(SPEED_TRACKER_URL, data = post_data)
+            requests.post(SPEED_TRACKER_URL, data=post_data)
         except:
             logging.exception("Failed to report fan speed")
 
 
 def main():
-    fan = PWMOutputDevice(GPIO_PIN)
+    fan = get_fan()
     restart_fan(fan)
     while True:
         temp = get_temp()
-        new_speed = get_speed(temp)
-        if new_speed != fan.value:
-            logging.info(f"Temp: {temp}; New fan speed: {new_speed}")
-            set_fan_speed(fan, new_speed)
-            report_fan_speed(new_speed)
+        if OVERRIDDEN:
+            logging.info(f"Temp: {temp}; (fan speed overridden to: {fan.value})")
         else:
-            logging.info(f"Temp: {temp}; (fan speed: {new_speed})")
+            new_speed = get_speed(temp)
+            if new_speed != fan.value:
+                logging.info(f"Temp: {temp}; New fan speed: {new_speed}")
+                set_fan_speed(fan, new_speed)
+                report_fan_speed(new_speed)
+            else:
+                logging.info(f"Temp: {temp}; (fan speed: {new_speed})")
         time.sleep(SLEEP_INTERVAL)
+
+
+def get_fan():
+    fan = PWMOutputDevice(GPIO_PIN)
+    return fan
 
 
 if __name__ == '__main__':
