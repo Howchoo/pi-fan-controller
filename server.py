@@ -28,7 +28,7 @@ def override_fan_speed():
             response=json.dumps({"success": False, "error": "speed variable must between 0 and 100"}),
             status=400
         )
-    Thread(target=lambda: override_speed(new_fan_speed)).start()
+    Thread(target=lambda: override_speed(new_fan_speed / 100)).start()
 
     return Response(status=201)
 
