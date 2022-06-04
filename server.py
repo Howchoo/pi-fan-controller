@@ -40,4 +40,4 @@ def get_fan_speed():
 
 
 Thread(target=main).start()
-app.run(port=2222)
+app.run(host='0.0.0.0', port=2222)
