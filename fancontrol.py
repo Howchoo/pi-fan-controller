@@ -8,6 +8,7 @@ import sys
 import requests
 from gpiozero import PWMOutputDevice
 
+OVERRIDE_SLEEP_INTERVAL = 60  # (seconds) How long to keep the overridden speed.
 SLEEP_INTERVAL = 20  # (seconds) How often we check the core temperature.
 GPIO_PIN = 18  # Which GPIO pin you're using to control the fan.
 
@@ -32,7 +33,7 @@ formatter = logging.Formatter('%(asctime)s [%(levelname)s] - %(message)s')
 handler.setFormatter(formatter)
 root.addHandler(handler)
 
-OVERRIDDEN = False
+OVERRIDDEN_SPEED = -1
 
 
 def get_temp():
@@ -62,17 +63,12 @@ def get_speed(temp):
 
 
 def override_speed(new_speed):
-    # fan = get_fan()
-    global OVERRIDDEN
-    OVERRIDDEN = True
-    # fan.value = new_speed
-    time.sleep(10)
-    OVERRIDDEN = False
+    global OVERRIDDEN_SPEED
+    OVERRIDDEN_SPEED = new_speed
 
 
 def get_current_speed():
-    fan = get_fan()
-    return fan.value
+    raise NotImplementedError("Getting current speed is not yet implemented")
 
 
 def set_fan_speed(fan, new_speed):
@@ -100,12 +96,17 @@ def report_fan_speed(speed):
 
 
 def main():
-    fan = get_fan()
+    global OVERRIDDEN_SPEED
+    fan = PWMOutputDevice(GPIO_PIN)
     restart_fan(fan)
     while True:
         temp = get_temp()
-        if OVERRIDDEN:
-            logging.info(f"Temp: {temp}; (fan speed overridden to: {fan.value})")
+        if OVERRIDDEN_SPEED != -1:
+            set_fan_speed(fan, OVERRIDDEN_SPEED)
+            logging.info(f"Temp: {temp}; (fan speed overridden to: {OVERRIDDEN_SPEED})")
+            report_fan_speed(OVERRIDDEN_SPEED)
+            time.sleep(OVERRIDE_SLEEP_INTERVAL)
+            OVERRIDDEN_SPEED = -1
         else:
             new_speed = get_speed(temp)
             if new_speed != fan.value:
@@ -114,12 +115,7 @@ def main():
                 report_fan_speed(new_speed)
             else:
                 logging.info(f"Temp: {temp}; (fan speed: {new_speed})")
-        time.sleep(SLEEP_INTERVAL)
-
-
-def get_fan():
-    fan = PWMOutputDevice(GPIO_PIN)
-    return fan
+            time.sleep(SLEEP_INTERVAL)
 
 
 if __name__ == '__main__':
