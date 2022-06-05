@@ -13,6 +13,7 @@ SLEEP_INTERVAL = 20  # (seconds) How often we check the core temperature.
 GPIO_PIN = 18  # Which GPIO pin you're using to control the fan.
 
 MIN_FAN_SPEED = 0.6
+CURRENT_FAN_SPEED = 0
 MAX_FAN_SPEED = 1
 
 OFF_THRESHOLD = 54
@@ -68,18 +69,20 @@ def override_speed(new_speed):
 
 
 def get_current_speed():
-    raise NotImplementedError("Getting current speed is not yet implemented")
+    return CURRENT_FAN_SPEED
 
 
 def set_fan_speed(fan, new_speed):
-    if fan.value != new_speed:
-        if fan.value == 0:
+    global CURRENT_FAN_SPEED
+    if CURRENT_FAN_SPEED != new_speed:
+        if CURRENT_FAN_SPEED == 0:
             restart_fan(fan)
         fan.value = new_speed
+        CURRENT_FAN_SPEED = new_speed
 
 
 def restart_fan(fan):
-    if fan.value != 0:
+    if CURRENT_FAN_SPEED != 0:
         fan.value = 0
         time.sleep(1)
     fan.value = 1
@@ -109,7 +112,7 @@ def main():
             OVERRIDDEN_SPEED = -1
         else:
             new_speed = get_speed(temp)
-            if new_speed != fan.value:
+            if new_speed != CURRENT_FAN_SPEED:
                 logging.info(f"Temp: {temp}; New fan speed: {new_speed}")
                 set_fan_speed(fan, new_speed)
                 report_fan_speed(new_speed)
