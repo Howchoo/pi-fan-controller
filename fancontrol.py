@@ -1,14 +1,30 @@
 #!/usr/bin/env python3
 
 import time
+import logging
 
-from gpiozero import OutputDevice
+from gpiozero import PWMOutputDevice
 
+"""
+ON_TEMP should be higher than the Raspi idle temperature (usually
+between 50-70 degC, depending on the base load), otherwise the fan will
+continuously switch ON and OFF.
+OFF_TEMP should be reachable with the minimum fan speed in the idle state,
+otherwise the fan will be continuously ON after triggered once (usually
+around 50 degC).
+"""
 
-ON_THRESHOLD = 65  # (degrees Celsius) Fan kicks on at this temperature.
-OFF_THRESHOLD = 55  # (degress Celsius) Fan shuts off at this temperature.
-SLEEP_INTERVAL = 5  # (seconds) How often we check the core temperature.
-GPIO_PIN = 17  # Which GPIO pin you're using to control the fan.
+FULL_ON_TEMP = 80.  # [degC] temp for max PWM
+ON_TEMP = 68.  # [degC] temp to switch on
+OFF_TEMP = 50.  # [degC] temp for min PWM
+INTERVAL = 5.  # [s] refresh interval
+GPIO_PIN = 17  # Pin to connect transistor base
+MAX_PWM = 1.  # PWM at max on temp
+MIN_PWM = .64  # PWM at lowest on temp
+MIN_STARTUP_PWM = .9  # PWM to use on startup
+PWM_FREQUENCY = 500  # [Hz] - with 100uF, and .7 min PWM
+FAN_MODES = ["linear", "exponential"]
+FAN_MODE = "exponential"
 
 
 def get_temp():
@@ -27,25 +43,43 @@ def get_temp():
     except (IndexError, ValueError,) as e:
         raise RuntimeError('Could not parse temperature output.') from e
 
-if __name__ == '__main__':
-    # Validate the on and off thresholds
-    if OFF_THRESHOLD >= ON_THRESHOLD:
-        raise RuntimeError('OFF_THRESHOLD must be less than ON_THRESHOLD')
+def turn_on_or_off(pwm_device: PWMOutputDevice, temp: int) -> None:
+    if pwm_device.is_active and temp < OFF_TEMP:
+        pwm_device.off()
+        print("Turned off")
+    elif not pwm_device.is_active and temp >= ON_TEMP:
+        pwm_device.on()
+        pwm_device.value = MIN_STARTUP_PWM
+        print("Turned on")
 
-    fan = OutputDevice(GPIO_PIN)
+def calc_pwm(pwm_range: float, temp_range: float, temp: float) -> float:
+    if FAN_MODE == "linear":
+        return pwm_range * (temp - OFF_TEMP) / temp_range + MIN_PWM
+    elif FAN_MODE == "exponential":
+        return (1.001 ** (3.7 * (temp - OFF_TEMP) / temp_range) ** 5 - 1) * pwm_range + MIN_PWM
+
+def fancontrol_loop():
+    fan = PWMOutputDevice(GPIO_PIN, frequency=PWM_FREQUENCY)
+
+    pwm_range = MAX_PWM - MIN_PWM
+    temp_range = FULL_ON_TEMP - OFF_TEMP
 
     while True:
         temp = get_temp()
+        if fan.is_active:
+            pwm = calc_pwm(pwm_range, temp_range, temp)
+            fan.value = max(min(pwm, MAX_PWM), MIN_PWM)
+        turn_on_or_off(fan, temp)
 
-        # Start the fan if the temperature has reached the limit and the fan
-        # isn't already running.
-        # NOTE: `fan.value` returns 1 for "on" and 0 for "off"
-        if temp > ON_THRESHOLD and not fan.value:
-            fan.on()
+        print(f"Current temp|PWM: {temp:.2f}|{fan.value:.2f}")
+        time.sleep(INTERVAL)
 
-        # Stop the fan if the fan is running and the temperature has dropped
-        # to 10 degrees below the limit.
-        elif fan.value and temp < OFF_THRESHOLD:
-            fan.off()
 
-        time.sleep(SLEEP_INTERVAL)
+if __name__ == "__main__":
+    assert ON_TEMP > OFF_TEMP, "ON_TEMP must be higher than OFF_TEMP"
+    assert ON_TEMP < FULL_ON_TEMP, "ON_TEMP must be lower than FULL_ON_TEMP"
+    assert MIN_STARTUP_PWM >= MIN_PWM, "MIN_STARTUP_PWM must be at least MIN_PWM"
+    assert MAX_PWM > MIN_PWM, "MAX_PWM must be higher than MIN_PWM"
+    assert FAN_MODE in FAN_MODES, f"FAN_MODE must be one of {str(FAN_MODES)}"
+
+    fancontrol_loop()
